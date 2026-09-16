@@ -10,6 +10,16 @@ import tempfile
 REQUIRED = ('LINODE_KUBECONFIG', 'GHCR_TOKEN', 'HIEVENTS_RUNTIME_JSON', 'IMAGE_DIGEST')
 
 
+def decode_kubeconfig(value):
+    try:
+        decoded = base64.b64decode(''.join(value.split()), validate=True).decode('utf-8')
+        if not decoded.strip() or '\x00' in decoded:
+            raise ValueError
+        return decoded
+    except (ValueError, UnicodeError):
+        raise SystemExit('Invalid LINODE_KUBECONFIG: expected base64-encoded UTF-8 kubeconfig YAML.') from None
+
+
 def main():
     missing = [key for key in REQUIRED if not os.environ.get(key)]
     if missing:
@@ -25,10 +35,11 @@ def main():
         assert runtime['DATABASE_URL'] == ('postgresql://hievents:' + runtime['POSTGRES_PASSWORD'] + '@hievents-postgres:5432/hievents')
     except (ValueError, AssertionError, TypeError):
         raise SystemExit('Invalid runtime secret schema or database wiring') from None
+    config = decode_kubeconfig(os.environ['LINODE_KUBECONFIG'])
     with tempfile.TemporaryDirectory(prefix='hievents-deploy-') as directory:
         kubeconfig = Path(directory) / 'config'
         kubeconfig.touch(mode=0o600)
-        kubeconfig.write_text(os.environ['LINODE_KUBECONFIG'])
+        kubeconfig.write_text(config, encoding='utf-8')
         env = {**os.environ, 'KUBECONFIG': str(kubeconfig)}
         kube = ['kubectl', '--context', 'lke428841-ctx']
 

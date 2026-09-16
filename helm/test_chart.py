@@ -1,5 +1,7 @@
+import base64
 import os
 from pathlib import Path
+import runpy
 import subprocess
 import tempfile
 import unittest
@@ -8,6 +10,7 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 DIGEST = 'sha256:' + 'a' * 64
+decode_kubeconfig = runpy.run_path(str(ROOT / 'scripts/deploy-helm.py'))['decode_kubeconfig']
 
 
 def render(*args):
@@ -18,6 +21,23 @@ def render(*args):
 
 
 class ChartTests(unittest.TestCase):
+    def test_decodes_kubeconfig(self):
+        config = 'apiVersion: v1\nkind: Config\nclusters: []\n'
+        encoded = base64.b64encode(config.encode()).decode()
+        for value in (encoded, '\n'.join(encoded[i:i + 16] for i in range(0, len(encoded), 16)) + '\n'):
+            with self.subTest(value=value):
+                self.assertEqual(decode_kubeconfig(value), config)
+
+    def test_rejects_invalid_kubeconfig_without_disclosing_input(self):
+        for value in ('', ' \n', 'not-base64!', 'apiVersion: v1\nkind: Config\n',
+                      'YQ', base64.b64encode(b'\xff').decode(),
+                      base64.b64encode(b'\x00').decode(), base64.b64encode(b'  ').decode()):
+            with self.subTest(value=value):
+                with self.assertRaises(SystemExit) as error:
+                    decode_kubeconfig(value)
+                self.assertEqual(str(error.exception),
+                                 'Invalid LINODE_KUBECONFIG: expected base64-encoded UTF-8 kubeconfig YAML.')
+
     def test_chart(self):
         result = render('--set', f'image.digest={DIGEST}')
         self.assertEqual(result.returncode, 0, result.stderr)

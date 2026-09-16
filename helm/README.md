@@ -8,7 +8,7 @@ Target: `admin.elementafestival.com`, namespace/release `hievents`, context `lke
 
 `helm-deploy.yml` is a manual production deployment. Select main and supply the published digest. It requires:
 
-- `LINODE_KUBECONFIG`: raw YAML kubeconfig with context `lke428841-ctx`, authorized for namespace provisioning and Hi.Events resources. Do not copy unrelated credentials into CI.
+- `LINODE_KUBECONFIG`: base64-encoded UTF-8 YAML kubeconfig with context `lke428841-ctx`, authorized for namespace provisioning and Hi.Events resources. Single-line and line-wrapped base64 are supported. The deploy script decodes it into a temporary owner-only file. Do not copy unrelated credentials into CI.
 - `GHCR_TOKEN`: durable credential with read access to this container package.
 - `HIEVENTS_RUNTIME_JSON`: JSON with exactly `APP_KEY`, `JWT_SECRET`, `POSTGRES_PASSWORD`, `DATABASE_URL`. The database URL must be `postgresql://hievents:<password>@hievents-postgres:5432/hievents`. Use a URL-safe generated password. Keep these values stable across deployments.
 
