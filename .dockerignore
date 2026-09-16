@@ -14,3 +14,8 @@ fly.toml
 
 frontend/.env*
 backend/.env*
+**/.env
+**/.env.*
+.git
+**/node_modules
+backend/vendor

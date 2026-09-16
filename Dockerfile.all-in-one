@@ -12,6 +12,10 @@ COPY ./frontend/package.json ./frontend/yarn.lock ./
 COPY ./frontend .
 COPY ./VERSION /app/VERSION
 
+ARG VITE_FRONTEND_URL
+ARG VITE_API_URL_CLIENT
+ARG VITE_APP_NAME=Hi.Events
+
 RUN yarn install --network-timeout 600000 --frozen-lockfile && yarn build
 
 # Use stable multi-arch serversideup/php image

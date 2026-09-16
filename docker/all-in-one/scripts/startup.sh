@@ -7,6 +7,7 @@ if ! php artisan migrate --force; then
     echo "ERROR: Migrations could not complete. Check the error above."
     echo "Ensure DATABASE_URL is set."
     echo "============================================"
+    exit 1
 fi
 
 php artisan cache:clear

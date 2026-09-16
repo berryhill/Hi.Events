@@ -1,0 +1,28 @@
+image:
+  repository: ghcr.io/berryhill/hi.events
+  digest: ""
+imagePullSecrets:
+  - name: ghcr-pull
+runtimeSecret: hievents-runtime
+host: admin.elementafestival.com
+registrationDisabled: true
+ingress:
+  enabled: true
+  className: nginx
+  issuer: letsencrypt-http
+storage:
+  className: linode-block-storage-retain
+  uploads: 10Gi
+  postgres: 10Gi
+  redis: 10Gi
+postgres:
+  image: postgres:17-alpine
+redis:
+  image: redis:7-alpine
+resources:
+  requests:
+    cpu: 250m
+    memory: 512Mi
+  limits:
+    cpu: "2"
+    memory: 2Gi

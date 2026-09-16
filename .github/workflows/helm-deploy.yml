@@ -1,0 +1,38 @@
+name: Deploy Helm release
+on:
+  workflow_dispatch:
+    inputs:
+      image_digest:
+        description: Published ghcr.io/berryhill/hi.events sha256 digest
+        required: true
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: hievents-production
+  cancel-in-progress: false
+jobs:
+  deploy:
+    if: github.repository == 'berryhill/Hi.Events' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    environment:
+      name: production
+      url: https://admin.elementafestival.com
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: azure/setup-helm@1a275c3b69536ee54be43f2070a358922e12c8d4
+        with:
+          version: v3.17.3
+      - uses: azure/setup-kubectl@776406bce94f63e41d621b960d78ee25c8b76ede
+        with:
+          version: v1.32.3
+      - name: Deploy
+        run: python3 scripts/deploy-helm.py
+        env:
+          LINODE_KUBECONFIG: ${{ secrets.LINODE_KUBECONFIG }}
+          GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
+          HIEVENTS_RUNTIME_JSON: ${{ secrets.HIEVENTS_RUNTIME_JSON }}
+          IMAGE_DIGEST: ${{ inputs.image_digest }}
