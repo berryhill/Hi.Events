@@ -35,4 +35,6 @@ jobs:
           LINODE_KUBECONFIG: ${{ secrets.LINODE_KUBECONFIG }}
           GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
           HIEVENTS_RUNTIME_JSON: ${{ secrets.HIEVENTS_RUNTIME_JSON }}
+          SMTP2GO_USERNAME: ${{ secrets.SMTP2GO_USERNAME }}
+          SMTP2GO_PASSWORD: ${{ secrets.SMTP2GO_PASSWORD }}
           IMAGE_DIGEST: ${{ inputs.image_digest }}

@@ -10,6 +10,7 @@ Target: `admin.elementafestival.com`, namespace/release `hievents`, context `lke
 
 - `LINODE_KUBECONFIG`: base64-encoded UTF-8 YAML kubeconfig with context `lke428841-ctx`, authorized for namespace provisioning and Hi.Events resources. Single-line and line-wrapped base64 are supported. The deploy script decodes it into a temporary owner-only file. Do not copy unrelated credentials into CI.
 - `GHCR_TOKEN`: durable credential with read access to this container package.
+- `SMTP2GO_USERNAME` and `SMTP2GO_PASSWORD`: a dedicated SMTP user's credentials, not the SMTP2GO API key. These are projected into the `hievents-mail` Kubernetes Secret, never Helm values. The application is restarted after each deployment so configuration and rotated credentials are loaded by both web and queue processes.
 - `HIEVENTS_RUNTIME_JSON`: JSON with exactly `APP_KEY`, `JWT_SECRET`, `POSTGRES_PASSWORD`, `DATABASE_URL`. The database URL must be `postgresql://hievents:<password>@hievents-postgres:5432/hievents`. Use a URL-safe generated password. Keep these values stable across deployments.
 
 Secrets are passed on stdin to Kubernetes and are not Helm values. The deploy script suppresses credential-bearing command output. It does not export or copy credentials from other applications.
@@ -22,7 +23,7 @@ The existing startup entrypoint runs migrations before serving and exits if migr
 
 Helm waits for workloads but deliberately does not use automatic rollback: database migrations may make older code incompatible. A failed upgrade requires inspection and a compatible forward fix or a separately planned database restore. Existing secrets and volumes are not deleted automatically.
 
-Public signup defaults to disabled. Bootstrap the first account through an explicitly authorized private setup before opening registration. Email uses the log transport (not delivered); payment keys are absent. Configure and verify SMTP and Stripe separately before ticket sales. The upstream all-in-one image runs its supervisor as root; this initial chart is not a hardened non-root deployment.
+Public signup defaults to disabled. Bootstrap the first account through an explicitly authorized private setup before opening registration. Email uses SMTP2GO at `mail.smtp2go.com:587` with STARTTLS and certificate verification. The sender defaults to `Elementa Festival <tickets@elementafestival.com>`; verify the domain in SMTP2GO before sending. Non-secret mail settings are under `mail` in `values.yaml`. Confirm actual delivery and account sending limits before ticket sales; a successful rollout does not verify email delivery. Payment keys are absent. The upstream all-in-one image runs its supervisor as root; this initial chart is not a hardened non-root deployment.
 
 ## DNS and TLS
 

@@ -7,7 +7,8 @@ import subprocess
 import tempfile
 
 
-REQUIRED = ('LINODE_KUBECONFIG', 'GHCR_TOKEN', 'HIEVENTS_RUNTIME_JSON', 'IMAGE_DIGEST')
+REQUIRED = ('LINODE_KUBECONFIG', 'GHCR_TOKEN', 'HIEVENTS_RUNTIME_JSON', 'IMAGE_DIGEST',
+            'SMTP2GO_USERNAME', 'SMTP2GO_PASSWORD')
 
 
 def decode_kubeconfig(value):
@@ -55,6 +56,8 @@ def main():
             run(kube + ['create', 'namespace', 'hievents'])
         for name, kind, data in [
             ('hievents-runtime', 'Opaque', runtime),
+            ('hievents-mail', 'Opaque', {'MAIL_USERNAME': os.environ['SMTP2GO_USERNAME'],
+                                        'MAIL_PASSWORD': os.environ['SMTP2GO_PASSWORD']}),
             ('ghcr-pull', 'kubernetes.io/dockerconfigjson', {'.dockerconfigjson': json.dumps({
                 'auths': {'ghcr.io': {'auth': base64.b64encode(('berryhill:' + os.environ['GHCR_TOKEN']).encode()).decode()}}
             })}),
@@ -67,6 +70,8 @@ def main():
                         '--kube-context', 'lke428841-ctx', '--namespace', 'hievents',
                         '--reset-values', '--set-string', 'image.digest=' + digest,
                         '--wait', '--timeout', '20m'], env=env, check=True)
+        run(kube + ['-n', 'hievents', 'rollout', 'restart', 'deployment/hievents'])
+        run(kube + ['-n', 'hievents', 'rollout', 'status', 'deployment/hievents', '--timeout=300s'])
         print('Helm rollout passed. DNS, TLS, email, and complete user journeys require separate verification.')
 
 

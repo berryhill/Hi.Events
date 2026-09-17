@@ -38,6 +38,8 @@ spec:
                 name: {{ .Release.Name }}
             - secretRef:
                 name: {{ .Values.runtimeSecret }}
+            - secretRef:
+                name: {{ .Values.mail.secret }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           startupProbe:

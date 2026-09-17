@@ -4,6 +4,13 @@ image:
 imagePullSecrets:
   - name: ghcr-pull
 runtimeSecret: hievents-runtime
+mail:
+  secret: hievents-mail
+  host: mail.smtp2go.com
+  port: 587
+  encryption: tls
+  fromAddress: tickets@elementafestival.com
+  fromName: Elementa Festival
 host: admin.elementafestival.com
 registrationDisabled: true
 ingress:
